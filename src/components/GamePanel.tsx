@@ -10,9 +10,11 @@ import { K } from './Katex';
 
 interface Step { pos: Position; via: MoveOption | null }
 
+interface LoopInfo { winner: Side; loopStart: number; vars: string[]; decisive: string; binder: 'mu' | 'nu' }
+
 type Result =
   | { kind: 'terminal'; winner: Side; reason: string }
-  | { kind: 'loop'; winner: Side; loopStart: number; vars: string[]; decisive: string; binder: 'mu' | 'nu' };
+  | ({ kind: 'loop' } & LoopInfo);
 
 interface Props { root: Formula; model: Model }
 
@@ -27,6 +29,7 @@ export function GamePanel({ root, model }: Props) {
   const [started, setStarted] = useState(false);
   const [history, setHistory] = useState<Step[]>([]);
   const [result, setResult] = useState<Result | null>(null);
+  const [pendingLoop, setPendingLoop] = useState<LoopInfo | null>(null);
   const [autoRun, setAutoRun] = useState(true);
 
   const initial = model.initial;
@@ -42,10 +45,11 @@ export function GamePanel({ root, model }: Props) {
     setUserSide(side);
     setStarted(true);
     setResult(null);
+    setPendingLoop(null);
     setHistory([{ pos: { state: initial, path: [] }, via: null }]);
   };
 
-  const reset = () => { setStarted(false); setHistory([]); setResult(null); };
+  const reset = () => { setStarted(false); setHistory([]); setResult(null); setPendingLoop(null); };
 
   const apply = useCallback((move: MoveOption) => {
     const key = posKey(move.to);
@@ -54,7 +58,9 @@ export function GamePanel({ root, model }: Props) {
     setHistory(next);
     if (idx < 0) return;
 
-    // ループ確定: 区間 [idx, next.length-1] を無限回繰り返すとみなす。
+    // 同じ位置（状態・論理式ノード）が2度目に現れた＝完全に同じ展開が繰り返された。
+    // ただちに終了とはせず、プレイヤーに無限ループとして確定するかどうかを尋ねる
+    // （人間はコンピュータと違って記憶を持つので、次は違う手を選べる）。
     const vars = next
       .slice(idx + 1)
       .map((s) => s.via)
@@ -68,16 +74,23 @@ export function GamePanel({ root, model }: Props) {
       if ((ctx.prio.get(v) ?? 0) > (ctx.prio.get(decisive) ?? 0)) decisive = v;
     }
     const binder = ctx.bmap.get(decisive)!.kind;
-    setResult({
-      kind: 'loop',
+    setPendingLoop({
       winner: binder === 'nu' ? 'V' : 'F',
       loopStart: idx, vars: uniq, decisive, binder,
     });
   }, [ctx, history]);
 
+  const confirmLoop = () => {
+    if (!pendingLoop) return;
+    setResult({ kind: 'loop', ...pendingLoop });
+    setPendingLoop(null);
+  };
+  const dismissLoop = () => setPendingLoop(null);
+
   // 自動手（μ/ν の展開と変数の巻き戻し）とコンピュータの手を進める。
+  // ループ確認待ちの間は止めておく。
   useEffect(() => {
-    if (!started || result || !current || !info) return;
+    if (!started || result || pendingLoop || !current || !info) return;
     if (info.turn === 'end') {
       setResult({ kind: 'terminal', winner: info.winner ?? 'F', reason: info.reason ?? '' });
       return;
@@ -95,10 +108,10 @@ export function GamePanel({ root, model }: Props) {
       return () => clearTimeout(t);
     }
     return;
-  }, [started, result, current, info, userSide, autoRun, history, ctx, solved, apply]);
+  }, [started, result, pendingLoop, current, info, userSide, autoRun, history, ctx, solved, apply]);
 
   const stepCpuOnce = () => {
-    if (!current || !info || result || info.turn === 'end' || info.turn === 'auto') return;
+    if (!current || !info || result || pendingLoop || info.turn === 'end' || info.turn === 'auto') return;
     const visited = new Set(history.map((s) => posKey(s.pos)));
     const cpu: Side = userSide === 'V' ? 'F' : 'V';
     apply(chooseMove(ctx, solved.solution, cpu, current.pos, info.moves, visited));
@@ -106,6 +119,7 @@ export function GamePanel({ root, model }: Props) {
 
   const undo = () => {
     setResult(null);
+    setPendingLoop(null);
     setHistory((h) => {
       // 自動手はまとめて巻き戻す（ユーザーの選択地点まで戻す）。
       let i = h.length - 1;
@@ -120,7 +134,7 @@ export function GamePanel({ root, model }: Props) {
     });
   };
 
-  const myTurn = !!info && info.turn === userSide && !result;
+  const myTurn = !!info && info.turn === userSide && !result && !pendingLoop;
   const candStates = myTurn ? info!.moves.filter((m) => m.kind === 'trans').map((m) => m.toState!) : [];
   const candKeys = myTurn ? info!.moves.filter((m) => m.kind === 'child').map((m) => keyOf(m.to.path)) : [];
 
@@ -170,7 +184,9 @@ export function GamePanel({ root, model }: Props) {
               <button className="mini warn" onClick={reset}>やり直す</button>
             </div>
 
-            {result ? (
+            {pendingLoop ? (
+              <LoopPrompt info={pendingLoop} ctx={ctx} onConfirm={confirmLoop} onDismiss={dismissLoop} />
+            ) : result ? (
               <ResultBox result={result} ctx={ctx} />
             ) : info && info.turn === 'auto' ? (
               <div className="turnbox auto">自動手: {info.moves[0].detail}</div>
@@ -285,6 +301,31 @@ export function GamePanel({ root, model }: Props) {
             に戻ってできたループです。
           </p>
         )}
+      </div>
+    </div>
+  );
+}
+
+function LoopPrompt({ info, ctx, onConfirm, onDismiss }: {
+  info: LoopInfo; ctx: Ctx; onConfirm: () => void; onDismiss: () => void;
+}) {
+  return (
+    <div className="turnbox loop-ask">
+      <div className="turnhead">まったく同じ展開が2回起こりました。無限ループと判定しますか？</div>
+      <p className="hint">
+        同じ状態・同じ論理式の位置に戻ってきました。このまま同じ応酬が永遠に続くとみなして
+        勝敗を決めることもできますし、無視してこの位置から続きを指すこともできます。
+      </p>
+      <div className="loop-ask-vars">
+        {info.vars.map((v) => (
+          <span key={v} className={v === info.decisive ? 'chip pick' : 'chip'}>
+            <K tex={`${ctx.bmap.get(v)?.kind === 'mu' ? '\\mu' : '\\nu'}\\,${v}`} />
+          </span>
+        ))}
+      </div>
+      <div className="movebtns">
+        <button className="movebtn" onClick={onConfirm}>無限ループと判定する</button>
+        <button className="movebtn" onClick={onDismiss}>無視して次の手を選ぶ</button>
       </div>
     </div>
   );

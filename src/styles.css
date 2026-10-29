@@ -234,12 +234,22 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--fix); }
 .katex-wrap { display: inline-block; line-height: 1; }
 .katex-wrap.muted { font-size: 13px; color: var(--muted); font-family: var(--font-body); }
 
-/* ---------------------------------------------------------------- tree */
-.tree-wrap { overflow: auto; border: 1px solid var(--board-edge); border-radius: 6px; background: var(--paper); padding: 4px; }
-
-/* ---------------------------------------------------------------- ズーム（マウスホイール／ピンチ／ボタン） */
+/* ----------------------------------------------------------------
+   ズーム（マウスホイール／ドラッグ／ピンチ／ボタン）。
+   枠（.zoom-viewport）の大きさは常に一定（レスポンシブに幅へ追従するだけ）で、
+   拡大縮小やパンは内側の .zoom-content だけに効く。100% = 枠にぴたりと収まる大きさ。
+*/
 .zoombox { position: relative; }
-.zoombox-scroll { overflow: auto; max-height: 460px; touch-action: pan-x pan-y; }
+.zoom-viewport {
+  position: relative; overflow: hidden; width: 100%;
+  min-height: 180px; max-height: 460px;
+  background: var(--paper); border: 1px solid var(--board-edge); border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: grab; touch-action: none; -webkit-user-select: none; user-select: none;
+}
+.zoom-viewport:active { cursor: grabbing; }
+.zoom-content { flex: none; will-change: transform; }
+.zoom-content > svg { display: block; width: 100%; height: 100%; }
 .zoom-controls {
   position: absolute; top: 8px; right: 8px; z-index: 1;
   display: flex; align-items: center; gap: 4px;
@@ -249,6 +259,8 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--fix); }
 }
 .zoom-controls .mini { padding: 2px 8px; }
 .zoom-pct { min-width: 38px; text-align: center; color: var(--muted); font-size: 11px; }
+
+/* ---------------------------------------------------------------- tree */
 .tree-svg { display: block; }
 .tree-edge { stroke: #b7bdac; stroke-width: 1.6; }
 .tree-edge.hot { stroke: var(--hot); stroke-width: 2.6; }
@@ -344,6 +356,9 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--fix); }
 .turnbox.mine { background: var(--hot-bg); border: 1px solid var(--glow); }
 .turnbox.theirs { background: #f1f2ea; border: 1px solid var(--board-edge); color: var(--muted); display: flex; gap: 10px; align-items: center; }
 .turnbox.auto { background: var(--fix-bg); border: 1px solid var(--fix-soft); color: #2f4f24; }
+.turnbox.loop-ask { background: var(--jump-bg); border: 1px solid #d5c3e0; }
+.turnbox.loop-ask .hint { margin: 6px 0 10px; }
+.loop-ask-vars { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
 .turnhead { margin-bottom: 8px; font-weight: 700; }
 .movebtns { display: flex; gap: 8px; flex-wrap: wrap; }
 .movebtn { display: flex; flex-direction: column; align-items: center; gap: 3px; background: var(--paper); border-color: var(--glow); min-width: 72px; }
