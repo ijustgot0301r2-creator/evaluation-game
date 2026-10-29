@@ -126,7 +126,7 @@ export function ZoomPane({ naturalWidth, naturalHeight, className, children }: Z
       <div
         ref={viewportRef}
         className={className ? `zoom-viewport ${className}` : 'zoom-viewport'}
-        style={{ aspectRatio: `${naturalWidth} / ${naturalHeight}` }}
+        style={{ aspectRatio: `${naturalWidth} / ${naturalHeight}`, maxWidth: naturalWidth }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}

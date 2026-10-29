@@ -241,8 +241,11 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--fix); }
 */
 .zoombox { position: relative; }
 .zoom-viewport {
-  position: relative; overflow: hidden; width: 100%;
-  min-height: 180px; max-height: 460px;
+  position: relative; overflow: hidden; width: 100%; margin: 0 auto;
+  /* max-width は naturalWidth(px) をインラインで指定 — 内容そのもののサイズより
+     大きく間延びさせない。aspect-ratio でその幅に対する高さを決めるので、
+     コンテナがさらに狭いときだけ縦横そのまま縮む（余白はできない）。 */
+  min-width: 140px; min-height: 100px; max-height: 420px;
   background: var(--paper); border: 1px solid var(--board-edge); border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
   cursor: grab; touch-action: none; -webkit-user-select: none; user-select: none;
