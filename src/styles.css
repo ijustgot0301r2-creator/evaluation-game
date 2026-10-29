@@ -251,6 +251,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--fix); }
   cursor: grab; touch-action: none; -webkit-user-select: none; user-select: none;
 }
 .zoom-viewport:active { cursor: grabbing; }
+.zoom-viewport.tree-viewport { min-width: 260px; }
 .zoom-content { flex: none; will-change: transform; }
 .zoom-content > svg { display: block; width: 100%; height: 100%; }
 .zoom-controls {
@@ -259,7 +260,9 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--fix); }
   background: rgba(255, 254, 249, .92);
   border: 1px solid var(--board-edge); border-radius: 7px;
   padding: 3px 5px;
+  opacity: 1; transition: opacity .5s ease;
 }
+.zoom-controls.idle { opacity: 0; pointer-events: none; }
 .zoom-controls .mini { padding: 2px 8px; }
 .zoom-pct { min-width: 38px; text-align: center; color: var(--muted); font-size: 11px; }
 

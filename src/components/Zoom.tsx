@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 // 「枠は固定、内側の内容だけ拡大縮小・パン」するビューア。
 // 100% = 枠にぴたりと収まる大きさ（object-fit: contain と同じ考え方）。
@@ -9,6 +9,7 @@ const WHEEL_SENS = 0.0018;
 const BTN_FACTOR = 1.3;
 const DRAG_THRESHOLD = 4;
 const CLICK_SUPPRESS_MS = 150;
+const IDLE_DELAY_MS = 1400; // カーソルが枠外に出てからこの時間でズーム操作パネルをフェードアウト
 
 interface Size { w: number; h: number }
 
@@ -29,6 +30,22 @@ export function ZoomPane({ naturalWidth, naturalHeight, className, children }: Z
   const dragRef = useRef<{ x: number; y: number; panX: number; panY: number; moved: boolean } | null>(null);
   const pinchRef = useRef<number | null>(null);
   const suppressClickUntil = useRef(0);
+
+  // カーソルが枠内にない状態がしばらく続いたら操作パネルをフェードアウトする。
+  const [controlsIdle, setControlsIdle] = useState(false);
+  const idleTimer = useRef<number | null>(null);
+  const scheduleIdle = () => {
+    if (idleTimer.current !== null) window.clearTimeout(idleTimer.current);
+    idleTimer.current = window.setTimeout(() => setControlsIdle(true), IDLE_DELAY_MS);
+  };
+  const wake = () => {
+    setControlsIdle(false);
+    if (idleTimer.current !== null) window.clearTimeout(idleTimer.current);
+  };
+  useEffect(() => {
+    scheduleIdle();
+    return () => { if (idleTimer.current !== null) window.clearTimeout(idleTimer.current); };
+  }, []);
 
   useLayoutEffect(() => {
     const el = viewportRef.current;
@@ -122,7 +139,7 @@ export function ZoomPane({ naturalWidth, naturalHeight, className, children }: Z
   const reset = () => { setUserScale(1); setPan({ x: 0, y: 0 }); };
 
   return (
-    <div className="zoombox">
+    <div className="zoombox" onPointerEnter={wake} onPointerLeave={scheduleIdle}>
       <div
         ref={viewportRef}
         className={className ? `zoom-viewport ${className}` : 'zoom-viewport'}
@@ -143,7 +160,7 @@ export function ZoomPane({ naturalWidth, naturalHeight, className, children }: Z
           {children}
         </div>
       </div>
-      <div className="zoom-controls">
+      <div className={controlsIdle ? 'zoom-controls idle' : 'zoom-controls'}>
         <button type="button" className="mini" onClick={zoomOut} disabled={userScale <= 1} title="縮小">−</button>
         <span className="zoom-pct">{Math.round(userScale * 100)}%</span>
         <button type="button" className="mini" onClick={zoomIn} disabled={userScale >= MAX_SCALE} title="拡大">＋</button>
