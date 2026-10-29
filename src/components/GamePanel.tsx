@@ -138,7 +138,6 @@ export function GamePanel({ root, model }: Props) {
         <h3>評価ゲーム</h3>
 
         <div className="verdict">
-          <span className="verdict-label">ゼーロンカ法による解析:</span>
           <span className={truthWinner === 'V' ? 'badge v' : 'badge f'}>
             初期位置では{sideName(truthWinner ?? 'F')}に必勝戦略あり
           </span>
@@ -149,7 +148,7 @@ export function GamePanel({ root, model }: Props) {
 
         {!started ? (
           <div className="rolebox">
-            <p className="hint">どちらを担当しますか？ 相手は必勝戦略（記憶なし）で打ってきます。</p>
+            <p className="hint">どちらを担当しますか？</p>
             <div className="rolebtns">
               <button className="big v" onClick={() => start('V')}>肯定者で始める</button>
               <button className="big f" onClick={() => start('F')}>否定者で始める</button>

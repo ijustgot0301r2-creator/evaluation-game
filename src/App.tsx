@@ -33,7 +33,6 @@ export default function App() {
             </svg>
           </span>
         </h1>
-        <p className="subtitle">様相μ計算の評価ゲームを、実際に対局しながら理解する。</p>
       </header>
 
       <section className="board">

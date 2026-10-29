@@ -1,5 +1,6 @@
 import { Formula, Path, keyOf, nodeTex, binderMap } from '../logic/formula';
 import { katexHtml } from './Katex';
+import { useZoom, ZoomControls } from './Zoom';
 
 interface LNode { path: Path; key: string; node: Formula; tex: string; x: number; y: number; w: number; h: number }
 
@@ -62,6 +63,7 @@ export function FormulaTree({
   const { nodes, edges, width, height, byKey } = layout(root);
   const bmap = binderMap(root);
   const hi = new Set(highlightKeys);
+  const zoom = useZoom();
 
   const jumps = showJumps
     ? nodes
@@ -76,8 +78,19 @@ export function FormulaTree({
     : [];
 
   return (
-    <div className="tree-wrap">
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="tree-svg">
+    <div className="zoombox">
+      <div
+        className="zoombox-scroll tree-wrap"
+        onWheel={zoom.onWheel}
+        onTouchStart={zoom.onTouchStart}
+        onTouchMove={zoom.onTouchMove}
+        onTouchEnd={zoom.onTouchEnd}
+      >
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="tree-svg"
+        style={{ width: width * zoom.scale, height: height * zoom.scale }}
+      >
         <defs>
           <marker id="tri" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
             <path d="M0,0 L10,5 L0,10 z" fill="var(--jump)" />
@@ -143,6 +156,8 @@ export function FormulaTree({
           );
         })}
       </svg>
+      </div>
+      <ZoomControls scale={zoom.scale} zoomIn={zoom.zoomIn} zoomOut={zoom.zoomOut} reset={zoom.reset} />
     </div>
   );
 }

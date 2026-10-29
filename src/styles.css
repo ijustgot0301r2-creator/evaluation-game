@@ -84,11 +84,6 @@ code { font-family: "SFMono-Regular", Consolas, "Noto Sans Mono", monospace; }
   stroke-linecap: round;
   opacity: .8;
 }
-.masthead .subtitle {
-  font-size: 13.5px;
-  color: var(--muted);
-  margin: 10px 0 0;
-}
 
 /* ---------------------------------------------------------------- whiteboard sections */
 .board {
@@ -241,6 +236,19 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--fix); }
 
 /* ---------------------------------------------------------------- tree */
 .tree-wrap { overflow: auto; border: 1px solid var(--board-edge); border-radius: 6px; background: var(--paper); padding: 4px; }
+
+/* ---------------------------------------------------------------- ズーム（マウスホイール／ピンチ／ボタン） */
+.zoombox { position: relative; }
+.zoombox-scroll { overflow: auto; max-height: 460px; touch-action: pan-x pan-y; }
+.zoom-controls {
+  position: absolute; top: 8px; right: 8px; z-index: 1;
+  display: flex; align-items: center; gap: 4px;
+  background: rgba(255, 254, 249, .92);
+  border: 1px solid var(--board-edge); border-radius: 7px;
+  padding: 3px 5px;
+}
+.zoom-controls .mini { padding: 2px 8px; }
+.zoom-pct { min-width: 38px; text-align: center; color: var(--muted); font-size: 11px; }
 .tree-svg { display: block; }
 .tree-edge { stroke: #b7bdac; stroke-width: 1.6; }
 .tree-edge.hot { stroke: var(--hot); stroke-width: 2.6; }
