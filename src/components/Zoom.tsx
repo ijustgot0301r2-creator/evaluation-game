@@ -58,19 +58,21 @@ export function ZoomPane({ naturalWidth, naturalHeight, className, children }: Z
     return () => ro.disconnect();
   }, []);
 
-  const baseFit = Math.min(container.w / naturalWidth, container.h / naturalHeight) || 1;
-  const scale = baseFit * userScale;
-
+  // 枠の大きさは aspect-ratio/max-width という「生の CSS」だけで決まる
+  // （ページ全体に CSS zoom がかかっていても矛盾なく追従する）。
+  // .zoom-content は常にその枠に 100% で合わせているので、ここでの倍率計算は
+  // naturalWidth/naturalHeight を一切参照しない — container（＝枠自身の実測値）
+  // だけで閉じているので、祖先の zoom と二重に掛け合ってしまうことがない。
   const clampPan = (p: { x: number; y: number }, s: number) => {
-    const maxX = Math.max(0, (naturalWidth * s - container.w) / 2);
-    const maxY = Math.max(0, (naturalHeight * s - container.h) / 2);
+    const maxX = Math.max(0, (container.w * s - container.w) / 2);
+    const maxY = Math.max(0, (container.h * s - container.h) / 2);
     return { x: Math.min(maxX, Math.max(-maxX, p.x)), y: Math.min(maxY, Math.max(-maxY, p.y)) };
   };
 
   const applyScale = (next: number) => {
     const ns = Math.min(MAX_SCALE, Math.max(1, next));
     setUserScale(ns);
-    setPan((p) => clampPan(p, baseFit * ns));
+    setPan((p) => clampPan(p, ns));
   };
 
   // ホイールとタッチのピンチは React の合成イベントだと passive 扱いになり
@@ -116,7 +118,7 @@ export function ZoomPane({ naturalWidth, naturalHeight, className, children }: Z
       el.removeEventListener('click', onClickCapture, true);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userScale, baseFit, container.w, container.h, naturalWidth, naturalHeight]);
+  }, [userScale, container.w, container.h]);
 
   const onPointerDown = (e: React.PointerEvent) => {
     dragRef.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y, moved: false };
@@ -127,7 +129,7 @@ export function ZoomPane({ naturalWidth, naturalHeight, className, children }: Z
     const dx = e.clientX - d.x;
     const dy = e.clientY - d.y;
     if (!d.moved && Math.hypot(dx, dy) > DRAG_THRESHOLD) d.moved = true;
-    if (d.moved) setPan(clampPan({ x: d.panX + dx, y: d.panY + dy }, scale));
+    if (d.moved) setPan(clampPan({ x: d.panX + dx, y: d.panY + dy }, userScale));
   };
   const endDrag = () => {
     if (dragRef.current?.moved) suppressClickUntil.current = Date.now() + CLICK_SUPPRESS_MS;
@@ -151,11 +153,7 @@ export function ZoomPane({ naturalWidth, naturalHeight, className, children }: Z
       >
         <div
           className="zoom-content"
-          style={{
-            width: naturalWidth,
-            height: naturalHeight,
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
-          }}
+          style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${userScale})` }}
         >
           {children}
         </div>

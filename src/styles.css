@@ -42,6 +42,8 @@ body {
   font-family: var(--font-body);
   font-size: 14.5px;
   line-height: 1.7;
+  /* ブラウザの125%ズームに相当する見た目をデフォルトにする。 */
+  zoom: 1.25;
 }
 
 code { font-family: "SFMono-Regular", Consolas, "Noto Sans Mono", monospace; }
@@ -247,12 +249,11 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--fix); }
      コンテナがさらに狭いときだけ縦横そのまま縮む（余白はできない）。 */
   min-width: 140px; min-height: 100px; max-height: 420px;
   background: var(--paper); border: 1px solid var(--board-edge); border-radius: 6px;
-  display: flex; align-items: center; justify-content: center;
   cursor: grab; touch-action: none; -webkit-user-select: none; user-select: none;
 }
 .zoom-viewport:active { cursor: grabbing; }
 .zoom-viewport.tree-viewport { min-width: 260px; }
-.zoom-content { flex: none; will-change: transform; }
+.zoom-content { position: absolute; inset: 0; will-change: transform; }
 .zoom-content > svg { display: block; width: 100%; height: 100%; }
 .zoom-controls {
   position: absolute; top: 8px; right: 8px; z-index: 1;
