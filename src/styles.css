@@ -239,7 +239,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--fix); }
    枠（.zoom-viewport）の大きさは常に一定（レスポンシブに幅へ追従するだけ）で、
    拡大縮小やパンは内側の .zoom-content だけに効く。100% = 枠にぴたりと収まる大きさ。
 */
-.zoombox { position: relative; }
+.zoombox { position: relative; min-width: 0; }
 .zoom-viewport {
   position: relative; overflow: hidden; width: 100%; margin: 0 auto;
   /* max-width は naturalWidth(px) をインラインで指定 — 内容そのもののサイズより
@@ -381,8 +381,8 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--fix); }
 
 /* 盤面: カード枠を持たず、紙の上に直接並べる */
 .board-wrap { min-width: 0; }
-.board-surface { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
-.board-surface > div { border-top: 1px dashed var(--board-edge); padding-top: 12px; }
+.board-surface { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.board-surface > div { min-width: 0; border-top: 1px dashed var(--board-edge); padding-top: 12px; }
 @media (max-width: 980px) { .board-surface { grid-template-columns: 1fr; } }
 
 .history-wrap { grid-column: 1 / -1; min-width: 0; }
