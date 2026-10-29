@@ -1,0 +1,400 @@
+@import 'katex/dist/katex.min.css';
+
+:root {
+  /* ---- 紙／ホワイトボードの地色（彩度を落とした実物のマーカー色に寄せる） ---- */
+  --board: #eef1ea;
+  --board-dot: #c9cfc2;
+  --board-edge: #c7cdc0;
+  --paper: #fffef9;
+  --ink: #232821;
+
+  --muted: #74796e;
+
+  /* ---- マーカーの色（くすんだドライイレースマーカーの色味） ---- */
+  --v: #2a5fae;         /* 肯定者（コバルトブルー） */
+  --v-bg: #e4ecf7;
+  --v-soft: #b9cbe8;
+  --f: #b23a2e;         /* 否定者（レンガ色のレッド） */
+  --f-bg: #f6e8e5;
+  --f-soft: #e3bfb8;
+  --fix: #4f7a3e;        /* μ/ν（モスグリーン） */
+  --fix-bg: #e9efe3;
+  --fix-soft: #c3d6b4;
+  --jump: #7a5496;       /* 巻き戻し矢印（プラム） */
+  --jump-bg: #efe8f3;
+  --hot: #c97f1f;        /* 現在の手番（オーカー） */
+  --hot-bg: #f6e9cf;
+  --glow: #e4b63c;       /* 現在地点そのもの（唯一の強調色） */
+
+  --font-hand: 'Yomogi', cursive;
+  --font-body: 'BIZ UDPGothic', 'Noto Sans JP', sans-serif;
+
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html, body { background: #e2e6da; }
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+
+code { font-family: "SFMono-Regular", Consolas, "Noto Sans Mono", monospace; }
+
+.app {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 36px 22px 60px;
+}
+
+/* ---------------------------------------------------------------- header */
+.masthead {
+  text-align: center;
+  margin-bottom: 34px;
+}
+.masthead h1 {
+  margin: 0;
+  font-weight: 400;
+}
+.title-wrap {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-hand);
+  font-size: 44px;
+  color: var(--ink);
+  padding-bottom: 6px;
+}
+.scribble {
+  position: absolute;
+  left: 2%;
+  bottom: -2px;
+  width: 96%;
+  height: 11px;
+  overflow: visible;
+}
+.scribble path {
+  fill: none;
+  stroke: var(--glow);
+  stroke-width: 5;
+  stroke-linecap: round;
+  opacity: .8;
+}
+.masthead .subtitle {
+  font-size: 13.5px;
+  color: var(--muted);
+  margin: 10px 0 0;
+}
+
+/* ---------------------------------------------------------------- whiteboard sections */
+.board {
+  position: relative;
+  background-image:
+    radial-gradient(var(--board-dot) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  background-color: var(--board);
+  border: 1.5px solid var(--board-edge);
+  border-radius: 5px;
+  padding: 28px 28px 32px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 0 rgba(35, 40, 33, .05), 0 12px 20px -16px rgba(35, 40, 33, .22);
+}
+.pin {
+  position: absolute;
+  top: 10px; left: 16px;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, #aab0a0 70%, #868c7c);
+  box-shadow: 0 1px 2px rgba(0,0,0,.35);
+}
+.board-title {
+  font-family: var(--font-hand);
+  font-weight: 400;
+  font-size: 21px;
+  margin: 2px 0 18px 10px;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.numeral {
+  flex: none;
+  width: 30px; height: 30px;
+  border-radius: 48% 52% 51% 49% / 53% 47% 53% 47%;
+  border: 2px solid currentColor;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-hand);
+  font-size: 16px;
+  transform: rotate(-4deg);
+}
+.numeral.n1 { color: var(--v); }
+.numeral.n2 { color: var(--fix); }
+.numeral.n3 { color: var(--f); }
+
+h2 { font-size: 16px; margin: 0 0 10px; }
+h3 { font-size: 14px; margin: 16px 0 8px; color: var(--ink); font-weight: 700; }
+h3.subhead { color: var(--muted); font-size: 12.5px; font-weight: 600; }
+h4 { font-size: 12.5px; margin: 0 0 6px; color: var(--muted); font-weight: 600; }
+
+/* ---------------------------------------------------------------- generic controls */
+button {
+  font: inherit; cursor: pointer; border: 1px solid var(--board-edge);
+  background: var(--paper); color: var(--ink); border-radius: 8px;
+  padding: 6px 13px; transition: transform .05s, background .12s;
+}
+button:hover:not(:disabled) { background: #f6f7f1; }
+button:active:not(:disabled) { transform: translateY(1px); }
+button:disabled { opacity: .4; cursor: not-allowed; }
+
+button.mini { padding: 3px 10px; font-size: 12px; border-radius: 6px; }
+button.warn { color: var(--f); border-color: var(--f-soft); }
+button.warn:hover:not(:disabled) { background: var(--f-bg); }
+button.big { padding: 11px 24px; font-size: 15.5px; font-weight: 700; border-radius: 9px; }
+button.big.v { background: var(--v); border-color: var(--v); color: #fff; }
+button.big.f { background: var(--f); border-color: var(--f); color: #fff; }
+button.big:hover:not(:disabled) { transform: translateY(-1px); }
+
+/* "マーカーキャップ"風の演算子ボタン */
+button.op {
+  min-width: 44px; padding: 7px 14px; font-size: 16px; border-radius: 9px;
+  border-width: 1.5px;
+}
+button.op-f { background: var(--f-bg); border-color: var(--f-soft); color: var(--f); }
+button.op-v { background: var(--v-bg); border-color: var(--v-soft); color: var(--v); }
+button.op-fix { background: var(--fix-bg); border-color: var(--fix-soft); color: var(--fix); }
+button.op-var { background: var(--jump-bg); border-color: #d5c3e0; color: var(--jump); font-size: 14px; }
+button.op-lit { background: var(--paper); border-color: var(--board-edge); font-size: 14px; }
+button.op-lit.neg { color: var(--f); }
+button.op-const { background: #f3f4ee; font-size: 15px; }
+button.op:hover:not(:disabled) { transform: translateY(-1px); }
+
+input[type="text"], input:not([type]), select {
+  font: inherit; padding: 6px 10px; border: 1px solid var(--board-edge);
+  border-radius: 7px; background: var(--paper); color: var(--ink);
+}
+input[type="checkbox"], input[type="radio"] { accent-color: var(--fix); }
+
+.card {
+  background: var(--paper); border: 1px solid var(--board-edge);
+  border-radius: 6px; padding: 16px;
+}
+
+.hint { color: var(--muted); font-size: 12.5px; margin: 0 0 12px; }
+.muted { color: var(--muted); }
+
+/* ---------------------------------------------------------------- 2-column editor layout */
+.editor-grid { display: grid; grid-template-columns: minmax(300px, 1fr) minmax(320px, 1.15fr); gap: 22px; align-items: start; }
+.play-grid { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(380px, 1.3fr); gap: 18px; align-items: start; }
+@media (max-width: 980px) {
+  .editor-grid, .play-grid { grid-template-columns: 1fr; }
+}
+.tree-col, .canvas-col, .side-col { min-width: 0; }
+
+/* ---------------------------------------------------------------- sticky note (play placeholder) */
+.sticky-note {
+  position: relative;
+  background: var(--hot-bg);
+  clip-path: polygon(0 0, 100% 0, 100% 92%, 94% 100%, 0 100%);
+  padding: 16px 22px 22px;
+  max-width: 440px;
+  transform: rotate(-.8deg);
+  font-size: 13.5px;
+}
+.sticky-note p { margin: 0 0 6px; font-weight: 700; }
+.sticky-note ul { margin: 0; padding-left: 18px; }
+.sticky-note li { margin-bottom: 3px; }
+
+/* ---------------------------------------------------------------- selbar / varinput */
+.selbar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: var(--paper); border: 1px solid var(--board-edge); border-radius: 7px;
+  padding: 7px 11px; margin-bottom: 14px; font-size: 13px;
+}
+.selbar-label { color: var(--muted); }
+.selbar-sep { color: var(--board-edge); }
+.selbar .sub { color: var(--v); }
+
+.keypad { display: flex; flex-direction: column; gap: 9px; }
+.keyrow { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.keylab { width: 78px; flex: none; color: var(--muted); font-size: 12px; }
+.keynote { color: var(--muted); font-size: 12px; }
+.keynote.warn-note { color: var(--f); }
+.fixrow .varinput { width: 150px; }
+.varpreview { padding: 2px 8px; background: var(--fix-bg); border-radius: 6px; border: 1px dashed var(--fix-soft); }
+
+.formula-line { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; }
+.formula-line .big {
+  font-size: 19px; overflow-x: auto; padding: 10px 4px;
+  border-top: 1px dashed var(--board-edge);
+}
+
+.errors { margin: 12px 0 0; padding-left: 20px; color: var(--f); font-size: 13px; }
+.ok { margin-top: 12px; color: var(--fix); font-size: 13px; }
+
+/* ---------------------------------------------------------------- KaTeX wrapper tweaks */
+.katex-wrap { display: inline-block; line-height: 1; }
+.katex-wrap.muted { font-size: 13px; color: var(--muted); font-family: var(--font-body); }
+
+/* ---------------------------------------------------------------- tree */
+.tree-wrap { overflow: auto; border: 1px solid var(--board-edge); border-radius: 6px; background: var(--paper); padding: 4px; }
+.tree-svg { display: block; }
+.tree-edge { stroke: #b7bdac; stroke-width: 1.6; }
+.tree-edge.hot { stroke: var(--hot); stroke-width: 2.6; }
+.tree-jump { fill: none; stroke: var(--jump); stroke-width: 1.4; stroke-dasharray: 5 4; opacity: .8; }
+
+.tree-node rect { fill: var(--paper); stroke: #b7bdac; stroke-width: 1.6; }
+.tree-math { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 16px; color: var(--ink); overflow: visible; }
+.hole-mark { font-size: 15px; fill: var(--muted); }
+.tree-node.clickable { cursor: pointer; }
+.tree-node.clickable:hover rect { stroke: var(--v); }
+.tree-node.k-hole rect { stroke-dasharray: 4 3; stroke: #9aa090; fill: #f0f1ea; }
+.tree-node.k-and rect, .tree-node.k-box rect { fill: var(--f-bg); stroke: var(--f-soft); }
+.tree-node.k-or rect, .tree-node.k-dia rect { fill: var(--v-bg); stroke: var(--v-soft); }
+.tree-node.k-mu rect, .tree-node.k-nu rect { fill: var(--fix-bg); stroke: var(--fix-soft); }
+.tree-node.k-var rect { fill: var(--jump-bg); stroke: #d5c3e0; stroke-dasharray: 3 2; }
+.tree-node.selected rect { stroke: var(--v); stroke-width: 3; }
+.tree-node.hot rect { stroke: var(--hot); stroke-width: 3; }
+.tree-node.current rect { fill: var(--hot-bg); stroke: var(--glow); stroke-width: 3.4; }
+
+/* ---------------------------------------------------------------- model */
+.model-svg { width: 100%; height: auto; display: block; border: 1px solid var(--board-edge); border-radius: 6px; background: var(--paper); touch-action: none; }
+.model-bg { fill: transparent; }
+.edge-line { fill: none; stroke: #5b6155; stroke-width: 1.8; pointer-events: none; }
+.edge-hit { fill: none; stroke: transparent; stroke-width: 16; cursor: pointer; }
+.edge-hit:hover { stroke: rgba(178, 58, 46, .14); }
+.init-arrow { fill: none; stroke: var(--v); stroke-width: 2; pointer-events: none; }
+
+.model-state circle { fill: var(--paper); stroke: #70766a; stroke-width: 2.2; }
+.model-state .st-label { font-size: 13px; font-weight: 700; fill: var(--ink); pointer-events: none; }
+.st-props-math { font-size: 11px; color: var(--muted); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; pointer-events: none; }
+.st-props-empty { font-size: 11px; fill: var(--muted); pointer-events: none; }
+.model-state.initial circle { stroke: var(--v); }
+.model-state.picked circle { stroke: var(--hot); stroke-width: 3; stroke-dasharray: 5 3; }
+.model-state.current circle { fill: var(--hot-bg); stroke: var(--glow); stroke-width: 3.4; }
+.model-state.cand circle { stroke: var(--hot); stroke-width: 3; stroke-dasharray: 5 3; }
+.model-state.draggable { cursor: grab; }
+.model-state.pointer { cursor: pointer; }
+
+.trash-btn { cursor: pointer; }
+.trash-btn circle { fill: var(--f); stroke: var(--paper); stroke-width: 1.5; }
+.trash-btn path { stroke: #fff; stroke-width: 2; stroke-linecap: round; }
+.trash-btn:hover circle { fill: #94271d; }
+
+.proprow { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #eceee4; border: 1px solid var(--board-edge); border-radius: 999px;
+  padding: 3px 11px; font-size: 12.5px;
+}
+.chip.dashed { border-style: dashed; }
+.hole-chip { font-size: 13px; }
+.chip.pick { background: var(--hot-bg); border-color: var(--glow); }
+.chip .x { border: none; background: none; padding: 0 0 0 2px; color: var(--muted); font-size: 14px; line-height: 1; }
+.prio-note { color: var(--muted); font-size: 11px; margin-left: 3px; }
+
+.table-scroll { overflow-x: auto; }
+.val-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 10px; }
+.val-table th, .val-table td { border-bottom: 1px solid var(--board-edge); padding: 5px 9px; text-align: left; }
+.val-table th { color: var(--muted); font-weight: 600; font-size: 12px; }
+.val-table.small { font-size: 12.5px; }
+.namebox { width: 86px; }
+
+/* ---------------------------------------------------------------- play: 評価ゲームの状況（スコアカード風） */
+.scorecard {
+  background: var(--paper);
+  border: 1px solid var(--board-edge);
+  border-top: 3px double var(--board-edge);
+  border-radius: 4px;
+  padding: 14px 16px 16px;
+}
+.verdict {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: #f3f4ee; border: 1px solid var(--board-edge); border-radius: 6px;
+  padding: 9px 12px; margin-bottom: 12px;
+}
+.verdict-label { color: var(--muted); font-size: 12.5px; }
+.badge { border-radius: 999px; padding: 3px 12px; font-size: 12.5px; font-weight: 700; }
+.badge.v { background: var(--v-bg); color: var(--v); }
+.badge.f { background: var(--f-bg); color: var(--f); }
+.truth { font-size: 13px; }
+
+.rolebox { text-align: center; padding: 10px 0 4px; }
+.rolebtns { display: flex; gap: 12px; justify-content: center; }
+
+.statusbar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 0 12px; border-bottom: 1px dashed var(--board-edge); margin-bottom: 12px; font-size: 13px;
+}
+.statusbar .auto { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: 12.5px; }
+
+.turnbox { border-radius: 6px; padding: 10px 13px; font-size: 13px; }
+.turnbox.mine { background: var(--hot-bg); border: 1px solid var(--glow); }
+.turnbox.theirs { background: #f1f2ea; border: 1px solid var(--board-edge); color: var(--muted); display: flex; gap: 10px; align-items: center; }
+.turnbox.auto { background: var(--fix-bg); border: 1px solid var(--fix-soft); color: #2f4f24; }
+.turnhead { margin-bottom: 8px; font-weight: 700; }
+.movebtns { display: flex; gap: 8px; flex-wrap: wrap; }
+.movebtn { display: flex; flex-direction: column; align-items: center; gap: 3px; background: var(--paper); border-color: var(--glow); min-width: 72px; }
+.mv-label { font-size: 12px; color: var(--muted); }
+.mv-preview { font-size: 14px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.resultbox { border-radius: 6px; padding: 12px 14px; }
+.resultbox.v { background: var(--v-bg); border: 1px solid var(--v-soft); }
+.resultbox.f { background: var(--f-bg); border: 1px solid var(--f-soft); }
+.r-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.resultbox.v .r-title { color: var(--v); }
+.resultbox.f .r-title { color: var(--f); }
+.r-reason { font-size: 13px; }
+.r-detail { margin: 10px 0 0; font-size: 12.5px; }
+.r-detail dt { color: var(--muted); font-weight: 600; margin-top: 6px; }
+.r-detail dd { margin: 3px 0 0; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+/* 盤面: カード枠を持たず、紙の上に直接並べる */
+.board-wrap { min-width: 0; }
+.board-surface { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.board-surface > div { border-top: 1px dashed var(--board-edge); padding-top: 12px; }
+@media (max-width: 980px) { .board-surface { grid-template-columns: 1fr; } }
+
+.history-wrap { grid-column: 1 / -1; min-width: 0; }
+
+.win-v { color: var(--v); }
+.win-f { color: var(--f); }
+
+/* ---------------------------------------------------------------- 棋譜: レシート/ノートの切れ端風 */
+.notepad-strip {
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 27px, var(--board-edge) 27px 28px);
+  background-position: 0 2px;
+  border-left: 1px dashed var(--board-edge);
+  padding: 4px 0 4px 14px;
+}
+.history { margin: 0; padding: 0; list-style: none; font-size: 12.5px; max-height: 340px; overflow: auto; }
+.history li {
+  display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap;
+  height: 28px; line-height: 28px;
+}
+.history li.loop { background: #f6e9cf77; }
+.history li.loop-start { border-top: 1.5px dashed var(--glow); }
+.history li.last { font-weight: 700; }
+.h-idx { color: var(--muted); min-width: 20px; }
+.h-state { font-weight: 700; min-width: 30px; }
+.h-node { min-width: 24px; color: var(--v); }
+.h-sub { color: var(--muted); }
+.h-via { color: var(--muted); font-size: 11.5px; }
+.h-via.jump { color: var(--jump); }
+
+footer { margin-top: 10px; color: var(--muted); font-size: 12.5px; text-align: center; }
+footer summary { cursor: pointer; font-family: var(--font-hand); font-size: 15px; }
+footer ul { margin: 12px auto 0; padding-left: 20px; max-width: 760px; text-align: left; }
+footer li { margin-bottom: 3px; }
+
+/* ---------------------------------------------------------------- 画面幅が狭い場合 */
+@media (max-width: 560px) {
+  .title-wrap { font-size: 32px; }
+  .board { padding: 20px 16px 24px; }
+  .keylab { width: auto; }
+}

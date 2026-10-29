@@ -1,0 +1,9 @@
+node_modules
+dist
+.DS_Store
+*.local
+
+# Claude Code ローカル設定・インストール済みスキル（個人の開発環境固有のため）
+.claude/
+.agents/
+skills-lock.json
